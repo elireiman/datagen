@@ -11,21 +11,15 @@ from faker import Factory
 
 """
 Example Usage to create json output of customer records, and to test 
-    python gen_dummy_02.py -dt customer -json -br
-    python gen_dummy_02.py -dt sales -json -c 10000000
+    python dummy_data_gen.py -dt customer -json -br
+    python dummy_data_gen.py -dt Sales -json -c 1000 -d "~/tmp"
+    python /efs/datagen/dummy_data_gen.py -dt Sales -d "/efs/dummydata" -c 100000
+    python ~/github/datagen/dummy_data_gen.py -dt Sales -d "/Users/ereiman/tmp" -c 100000
+
 
 QUEUE UP 8x threads:-------
-nohup python dummy-data-gen.py -dt sales -fn sales -c 100000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
+nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &
 --> 43K rows / seconds * 8 = 344K / seconds
---> Tri was getting 56K / sec
-
 
 """
 class TimeIt():
@@ -104,7 +98,7 @@ class DummyDataGen():
 
 		if self.add_date_to_filename:
 			dat=time.strftime("%Y%m%d%H%M%S")
-			file_name_combined = self.destination+'/'+self.fileName + '_' + dat + '_' + str(random.randint(100000,999999))
+			file_name_combined = self.destination+'/'+self.dataType + '_' + dat + '_' + str(random.randint(100000,999999))
 		else:
 			file_name_combined = self.destination+'/'+self.fileName
 
