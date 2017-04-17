@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 from datetime import timedelta
 from DataTypeBase import DataTypeBase
+import json
 
 class Sales(DataTypeBase):
 	def __init__(self, fake, useSystemDate=False):
