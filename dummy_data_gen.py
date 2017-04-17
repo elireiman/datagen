@@ -11,21 +11,12 @@ from faker import Factory
 
 """
 Example Usage to create json output of customer records, and to test 
-    python gen_dummy_02.py -dt customer -json -br
-    python gen_dummy_02.py -dt sales -json -c 10000000
+    python dummy_data_gen.py -dt customer -json -br
+    python dummy_data_gen.py -dt Sales -json -c 1000
 
 QUEUE UP 8x threads:-------
-nohup python dummy-data-gen.py -dt sales -fn sales -c 100000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
-nohup python dummy-data-gen.py -dt sales -fn sales -c 10000000 &
+nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &
 --> 43K rows / seconds * 8 = 344K / seconds
---> Tri was getting 56K / sec
-
 
 """
 class TimeIt():
