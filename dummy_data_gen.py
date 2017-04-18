@@ -95,7 +95,7 @@ class DummyDataGen():
 
 		if self.add_date_to_filename:
 			dat=time.strftime("%Y%m%d%H%M%S")
-			file_name_combined = self.destination+'/'+self.fileName + '_' + dat + '_' + str(random.randint(100000,999999))
+			file_name_combined = self.destination+'/'+self.dataType + '_' + dat + '_' + str(random.randint(100000,999999))
 		else:
 			file_name_combined = self.destination+'/'+self.fileName
 
