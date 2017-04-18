@@ -91,6 +91,7 @@ class DummyDataGen():
 		try:
 			module = importlib.import_module("datatypes.{}".format(self.dataType))
 			dummy_object = getattr(module, self.dataType)
+			dummy_object.ID = self.startingID
 		except ImportError:
 			print("There is no data type called {}.".format(self.dataType))
 			sys.exit()
@@ -109,7 +110,7 @@ class DummyDataGen():
 					f.write(dummy_object.get_headers(self.delimiter) + "\n")
 				end_id = self.startingID+self.count
 				for i in range(self.startingID, end_id):
-					temp = dummy_object(self.fake)
+					temp = dummy_object(self.fake, self.useSystemDate)
 					f.write((temp.to_record(self.delimiter) if not self.json else temp.to_json())+ "\n")
 					if i%self.statusEveryXRecords == 0:
 						timeit[self.dataType].log_status(i-self.startingID)
@@ -171,7 +172,7 @@ def set_starting_id(startingID,id_file_for_start):
 def get_command_line_arguments():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-dt", "--dataType", help="the data type of your dummy data. current options include sales, customer, product", default="Sales")
-	parser.add_argument("-id", "--startingID", help="The starting id for dummy objects that have auto incrementing id", default=1)
+	parser.add_argument("-id", "--startingID", help="The starting id for dummy objects that have auto incrementing id", type=int, default=1)
 	parser.add_argument("-idf", "--id_file_for_start", help="ID File containing the starting ID.  This overrides -id setting", type=str, default=None)
 	parser.add_argument("-c", "--count", help="the number of records to create", type=int, default=1000)
 	parser.add_argument("-fn", "--fileName", help="the name of the flat file that contains dummy data", default="dummy-data.txt")
