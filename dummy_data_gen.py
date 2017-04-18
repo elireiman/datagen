@@ -111,7 +111,7 @@ class DummyDataGen():
 					if i%self.statusEveryXRecords == 0:
 						timeit[self.dataType].log_status(i)
 				timeit[self.dataType].log_end_time()
-				#log_end_time()
+				#log_end_time() 
 		except IOError as e:
 			print("Did not successfully generate dummy data.")
 			print("Destination directory doesn't exist.")
