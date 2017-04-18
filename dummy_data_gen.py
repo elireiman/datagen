@@ -12,7 +12,7 @@ from faker import Factory
 """
 Example Usage to create json output of customer records, and to test 
     python dummy_data_gen.py -dt customer -json -br
-    python dummy_data_gen.py -dt Sales -json -c 1000
+    python ~/github/datagen/dummy_data_gen.py -dt Sales -json -c 1000 -sd -d ~/tmp
 
 QUEUE UP 8x threads:-------
 nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &

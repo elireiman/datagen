@@ -10,7 +10,7 @@ class Sales(DataTypeBase):
 		Sales.ID += 1
 		self.cust_ID = random.randint(1,100000000)
 		self.product_ID = random.randint(1,100000000)
-		self.total_dollar_amount = random.randint(1,1000000) * random.random()
+		self.total_dollar_amount = random.randint(1,1000) * random.random()
 		self.transaction_date = str(datetime.now() - timedelta(random.randint(0,3650))) # 3650 days or equivalently 10 years
 
 	@staticmethod
