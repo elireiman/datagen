@@ -1,26 +1,24 @@
 import argparse
-from datetime import datetime
-from datetime import timedelta
 import importlib
 import os
 import random
 import time
 import sys
-
+from datetime import datetime
+from datetime import timedelta
 from faker import Factory
 
 """
 Example Usage to create json output of customer records, and to test 
     python dummy_data_gen.py -dt customer -json -br
-    python ~/github/datagen/dummy_data_gen.py -dt Sales -json -c 1000 -sd -d ~/tmp
-
-QUEUE UP 8x threads:-------
-nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &
---> 43K rows / seconds * 8 = 344K / seconds
-
+    python ~/github/datagen/dummy_data_gen.py -dt Sales -json -c 1000 -sd -d ~/tmp -idf /tmp/id_file
+	nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &
+		--> 43K rows / seconds * 8 = 344K / seconds
+		--> 80K rows / sec on single micro instance on EFS (while bursting)
 """
+
 class TimeIt():
-	def __init__(self, run_type, destination, timing_log,rows):
+	def __init__(self, run_type, destination, timing_log,rows,filename):
 		self.run_type = run_type
 		self.date_start = time.time()
 		self.date_end = None
@@ -28,6 +26,7 @@ class TimeIt():
 		self.destination = destination
 		self.timing_log = timing_log
 		self.rows = rows
+		self.filename = filename
 
 	def log_status(self,i):
 		dat=time.strftime("%Y-%m-%d %H:%M:%S")
@@ -38,7 +37,7 @@ class TimeIt():
 		self.date_end = time.time()
 		self.seconds_runtime = self.date_end - self.date_start
 		rows_per_sec = int(self.rows / self.seconds_runtime)
-		with open(self.destination+'/'+self.timing_log, 'a') as f:
+		with open(os.path.join(self.destination,self.timing_log), 'a') as f:
 			msg = {
 			'run_type': self.run_type
 			, 'date_start': datetime.fromtimestamp(self.date_start).strftime('%Y-%m-%d %H:%M:%S')
@@ -46,6 +45,7 @@ class TimeIt():
 			, 'seconds_runtime': round(self.seconds_runtime,1)
 			, 'rows': self.rows
 			, 'rows_per_sec': rows_per_sec
+			, 'filename': self.filename
 			}
 			f.write(str(msg) + ",\n")
 			print(msg)
@@ -73,6 +73,7 @@ class DummyDataGen():
 		"""
 		self.dataType = conf['dataType']
 		self.startingID = conf['startingID']
+		self.id_file_for_start = conf['id_file_for_start']
 		self.count = conf['count']
 		self.fileName = conf['fileName']
 		self.destination = conf['destination']
@@ -83,6 +84,7 @@ class DummyDataGen():
 		self.useSystemDate = conf['useSystemDate']
 		self.add_date_to_filename = conf['add_date_to_filename']
 		self.json = conf['json']
+		self.move_file_to_child_dir = conf['move_file_to_child_dir']
 		self.fake = fake
 
 	def generate_dummy_data(self):
@@ -95,23 +97,30 @@ class DummyDataGen():
 
 		if self.add_date_to_filename:
 			dat=time.strftime("%Y%m%d%H%M%S")
-			file_name_combined = self.destination+'/'+self.dataType + '_' + dat + '_' + str(random.randint(100000,999999))
+			file_name_combined = self.dataType + '_' + dat + '_' + str(random.randint(100000,999999))
 		else:
-			file_name_combined = self.destination+'/'+self.fileName
+			file_name_combined = self.fileName
 
 		try:
-			with open(file_name_combined, 'w') as f:
+			with open(os.path.join(self.destination,file_name_combined), 'w') as f:
 				timeit = {}
-				timeit[self.dataType] = TimeIt(self.dataType, self.destination, self.timingLog, self.count)
+				timeit[self.dataType] = TimeIt(self.dataType, self.destination, self.timingLog, self.count, file_name_combined)
 				if not self.json:
 					f.write(dummy_object.get_headers(self.delimiter) + "\n")
-				for i in range(0, self.count):
+				end_id = self.startingID+self.count
+				for i in range(self.startingID, end_id):
 					temp = dummy_object(self.fake)
 					f.write((temp.to_record(self.delimiter) if not self.json else temp.to_json())+ "\n")
 					if i%self.statusEveryXRecords == 0:
-						timeit[self.dataType].log_status(i)
+						timeit[self.dataType].log_status(i-self.startingID)
 				timeit[self.dataType].log_end_time()
-				#log_end_time() 
+
+			#Move file to child directory
+			src = os.path.join(self.destination,file_name_combined)
+			dest = os.path.join(self.destination,self.move_file_to_child_dir,file_name_combined)
+			print 'Moving completed file to child directory: {dest}'.format(dest=dest)
+			os.rename(src, dest)
+
 		except IOError as e:
 			print("Did not successfully generate dummy data.")
 			print("Destination directory doesn't exist.")
@@ -123,7 +132,7 @@ class DummyDataGen():
 		Write the results to the file named benchmark-report.txt in the current directory.
 		"""
 		try:
-			with open(self.destination+'/'+'benchmark-report.txt', 'w') as f:
+			with open(os.path.join(self.destination,'benchmark-report.txt'), 'w') as f:
 				# Perform tests
 				test_cases = [100, 1000, 10000, 100000]
 				test_results = {}
@@ -151,19 +160,19 @@ class DummyDataGen():
 			print("Destination directory doesn't exist.")
 			return
 
-def main():
-	args = get_command_line_arguments()
-	conf = generate_configuration_dict_from(args)
-	ddg = DummyDataGen(conf, Factory.create())
-	if args.benchmarkReport is False:
-		ddg.generate_dummy_data()
+def set_starting_id(startingID,id_file_for_start):
+	if id_file_for_start:
+		with open(id_file_for_start,'r') as f:
+			starting_id = int(f.readline().strip())
 	else:
-		ddg.generate_benchmark_report()
+		starting_id = startingID
+	return starting_id
 
 def get_command_line_arguments():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-dt", "--dataType", help="the data type of your dummy data. current options include sales, customer, product", default="Sales")
 	parser.add_argument("-id", "--startingID", help="The starting id for dummy objects that have auto incrementing id", default=1)
+	parser.add_argument("-idf", "--id_file_for_start", help="ID File containing the starting ID.  This overrides -id setting", type=str, default=None)
 	parser.add_argument("-c", "--count", help="the number of records to create", type=int, default=1000)
 	parser.add_argument("-fn", "--fileName", help="the name of the flat file that contains dummy data", default="dummy-data.txt")
 	parser.add_argument("-d", "--destination", help="the directory destination to store the flat file", default=".")
@@ -174,6 +183,7 @@ def get_command_line_arguments():
 	parser.add_argument("-sd", "--useSystemDate", help="if set, will use system date as date value in dummy data", action="store_true")
 	parser.add_argument("-json", "--json", help="if set, will output dummy data in json format", action="store_true")
 	parser.add_argument("-ad", "--add_date_to_filename", help="Add Date to filename?", type=bool, default=True)
+	parser.add_argument("-mv", "--move_file_to_child_dir", help="Move file to child directory after complete", default='complete')
 	args = parser.parse_args()
 	if args.statusEveryXRecords == None:
 		args.statusEveryXRecords = args.count / 10
@@ -183,6 +193,7 @@ def generate_configuration_dict_from(args):
 	conf = {}
 	conf['dataType'] = args.dataType
 	conf['startingID'] = args.startingID
+	conf['id_file_for_start'] = args.id_file_for_start
 	conf['count'] = args.count
 	conf['fileName'] = args.fileName
 	conf['destination']  = args.destination
@@ -193,7 +204,21 @@ def generate_configuration_dict_from(args):
 	conf['useSystemDate'] = args.useSystemDate
 	conf['json'] = args.json
 	conf['add_date_to_filename'] = args.add_date_to_filename
+	conf['move_file_to_child_dir'] = args.move_file_to_child_dir
+	conf['id_file_for_start'] = args.id_file_for_start
 	return conf
+
+def main():
+	args = get_command_line_arguments()
+	conf = generate_configuration_dict_from(args)
+	starting_id = set_starting_id(conf['startingID'],conf['id_file_for_start'])
+	conf['startingID'] = starting_id
+	print 'Starting at ID: {starting_id}'.format(starting_id=starting_id)
+	ddg = DummyDataGen(conf, Factory.create())
+	if args.benchmarkReport is False:
+		ddg.generate_dummy_data()
+	else:
+		ddg.generate_benchmark_report()
 
 if __name__ == "__main__":
 	main()
