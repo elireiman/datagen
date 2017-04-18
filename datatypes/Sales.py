@@ -5,7 +5,7 @@ from DataTypeBase import DataTypeBase
 import json
 
 class Sales(DataTypeBase):
-	def __init__(self, fake, useSystemDate=True):
+	def __init__(self, fake, useSystemDate=False):
 		self.ID = Sales.ID
 		Sales.ID += 1
 		self.cust_ID = random.randint(1,100000000)
