@@ -20,7 +20,6 @@ class Customer(DataTypeBase):
 				"first name" + delimiter + \
 				"last name" + delimiter + \
 				"credit card number" + delimiter + \
-				#"billing address" + delimiter + \
 				"postalcode" + delimiter + \
 				"phone number" + delimiter + "date joined"
 
@@ -29,7 +28,6 @@ class Customer(DataTypeBase):
 				self.first_name + delimiter + \
 				self.last_name + delimiter + \
 				self.credit_card_number + delimiter + \
-				#self.billing_address + delimiter + \
 				self.postalcode + delimiter + \
 				self.phone_number + delimiter + \
 				str(self.date_joined)
