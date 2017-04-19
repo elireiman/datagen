@@ -13,10 +13,12 @@ v20170418a
 Example Usage to create json output of customer records, and to test 
     python dummy_data_gen.py -dt customer -json -br
     python ~/github/datagen/dummy_data_gen.py -dt Sales -json -c 1000 -sd -d ~/tmp -idf ~/id_file
-	python /efs/datagen/dummy_data_gen.py -dt Sales -d '/efs/dummydata' -c 2000000 -sd  -idf ~/id_file
+	python /efs/datagen/dummy_data_gen.py -dt Sales -d '/efs/dummydata' -c 100000 -sd  -idf ~/id_file
 	nohup python dummy_data_gen.py -dt sales -fn sales -c 100000000 &
 		--> 43K rows / seconds * 8 = 344K / seconds
 		--> 80K rows / sec on single micro instance on EFS (while bursting)
+
+	python /efs/datagen/dummy_data_gen.py -dt Customer -d '/efs/dummydata' -c 1000 -sd  -id 1
 """
 
 class TimeIt():
@@ -224,6 +226,7 @@ def main():
 		ddg.generate_benchmark_report()
 	final_id = starting_id + args.count
 	cmd = "echo '{}' > ~/id_file".format(final_id)
+	print cmd
 	os.system(cmd)
 
 if __name__ == "__main__":
