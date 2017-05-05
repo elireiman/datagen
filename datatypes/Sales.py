@@ -8,8 +8,8 @@ class Sales(DataTypeBase):
 	def __init__(self, fake, useSystemDate=False):
 		self.ID = Sales.ID
 		Sales.ID += 1
-		self.cust_ID = random.randint(1,100000000)
-		self.product_ID = random.randint(1,100000000)
+		self.cust_ID = random.randint(1,1000000)
+		self.product_ID = random.randint(1,1000)
 		self.total_dollar_amount = round(random.randint(1,1000) * random.random(),2)
 		if useSystemDate:
 			self.transaction_date = str(datetime.now())
